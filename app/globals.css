@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #ffffff;
+  --fg: #0f172a;
+  --brand: #ff80b5;
+  --brand-10: rgba(255, 128, 181, 0.10);
+  --brand-20: rgba(255, 128, 181, 0.20);
+  --brand-50: rgba(255, 128, 181, 0.50);
+}
+.dark {
+  --bg: #0b1020;
+  --fg: #e5e7eb;
+  --brand: #ff80b5;
+  --brand-10: rgba(255, 128, 181, 0.10);
+  --brand-20: rgba(255, 128, 181, 0.20);
+  --brand-50: rgba(255, 128, 181, 0.50);
+}
+html, body, #__next {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Romantic glow helpers */
+.romantic-card {
+  @apply rounded-2xl shadow-soft border border-white/10 bg-white/70 backdrop-blur dark:bg-white/5;
+}
+.romantic-tag {
+  @apply text-xs px-2 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/20;
+}
+
+/* Global background flourish */
+.app-bg {
+  background-image:
+    radial-gradient(60rem 30rem at 20% -10%, rgba(255, 128, 181, 0.18), transparent 60%),
+    radial-gradient(60rem 30rem at 110% 10%, rgba(124, 212, 255, 0.12), transparent 60%),
+    radial-gradient(50rem 25rem at 50% 110%, rgba(240, 171, 252, 0.12), transparent 60%);
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm transition;
+}
+.btn-soft {
+  @apply btn bg-white/60 dark:bg-white/10 border border-white/20 hover:bg-white/80 dark:hover:bg-white/15;
+}
+.btn-brand {
+  @apply btn text-white;
+  background-color: var(--brand);
+  box-shadow: 0 10px 30px -12px rgba(255, 128, 181, 0.6);
+}
+.btn-brand:hover { opacity: 0.95; }
+.segmented {
+  @apply inline-flex items-center gap-1 rounded-full p-1 bg-white/70 dark:bg-white/10 border border-white/20 shadow-soft;
+}
+.segmented .seg {
+  @apply px-3 py-1.5 rounded-full text-sm transition;
+}
+.segmented .seg.active {
+  @apply border;
+  background-color: var(--brand-20);
+  border-color: var(--brand-50);
+}
+
+/* Inputs */
+.input {
+  @apply w-full px-3 py-2 rounded-lg bg-white/70 dark:bg-white/10 border border-white/20 focus:outline-none;
+  transition: box-shadow .2s, border-color .2s;
+}
+.input:focus { box-shadow: 0 0 0 2px var(--brand-20); border-color: var(--brand-50); }
+.textarea {
+  @apply input;
+}
+.select {
+  @apply input;
+}
+
+/* Map frame */
+.map-frame {
+  @apply rounded-2xl overflow-hidden border border-white/20 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.35)];
+}
+
+
