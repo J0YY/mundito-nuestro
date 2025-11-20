@@ -20,3 +20,7 @@ declare module 'leaflet.heat' {
   ): L.Layer;
 }
 
+declare module 'leaflet.heat/dist/leaflet-heat.js' {
+  export * from 'leaflet.heat';
+}
+

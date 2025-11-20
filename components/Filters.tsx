@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { CATEGORY_LABELS } from "@utils/constants";
-import type { Category } from "@types/memory";
+import type { Category } from "../types/memory";
 import { useAppStore } from "@store/store";
 
 const CATEGORIES: Category[] = ['core','thought','bucket_list','trip','milestone','inside_joke','celebration','heartbreak_repair','anniversary','secret'];
@@ -11,14 +11,14 @@ export default function Filters() {
   const years = getAllYears();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-rise">
       <div>
         <div className="text-sm font-medium mb-2">Contributor</div>
         <div className="segmented">
           {(['all','joy','socrates'] as const).map((c) => (
             <button
               key={c}
-              className={`seg ${filters.contributor === c ? 'active' : ''}`}
+              className={`seg ${filters.contributor === c ? 'active' : ''} hover-elevate`}
               onClick={() => setFilters({ contributor: c })}
             >
               {c === 'all' ? 'All' : (c === 'joy' ? 'Joy' : 'Socrates')}

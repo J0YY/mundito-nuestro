@@ -35,11 +35,23 @@ body {
 }
 
 /* Global background flourish */
-.app-bg {
-  background-image:
-    radial-gradient(60rem 30rem at 20% -10%, rgba(255, 128, 181, 0.18), transparent 60%),
-    radial-gradient(60rem 30rem at 110% 10%, rgba(124, 212, 255, 0.12), transparent 60%),
-    radial-gradient(50rem 25rem at 50% 110%, rgba(240, 171, 252, 0.12), transparent 60%);
+.dashboard-shell {
+  min-height: 100vh;
+  background: radial-gradient(160% 160% at 50% 0%, rgba(133, 138, 247, 0.4) 0%, rgba(255, 255, 255, 0) 45%),
+              radial-gradient(120% 120% at 0% 20%, rgba(255, 128, 181, 0.25) 0%, rgba(255, 255, 255, 0) 55%),
+              #eef1ff;
+}
+.glass-panel {
+  @apply rounded-3xl border border-white/40 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl shadow-[0_25px_50px_-25px_rgba(15,23,42,0.55)];
+}
+.stat-card {
+  @apply glass-panel p-4 md:p-6 flex flex-col gap-2 relative overflow-hidden;
+}
+.stat-label {
+  @apply text-xs uppercase tracking-[0.25em] text-slate-500 dark:text-slate-300;
+}
+.stat-value {
+  @apply text-2xl md:text-3xl font-semibold;
 }
 
 /* Buttons */
@@ -85,4 +97,40 @@ body {
   @apply rounded-2xl overflow-hidden border border-white/20 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.35)];
 }
 
+/* Motion */
+@keyframes fade-in {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px) }
+  to { opacity: 1; transform: translateY(0) }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(.96) }
+  100% { opacity: 1; transform: scale(1) }
+}
+@keyframes float-y {
+  0% { transform: translateY(0) }
+  50% { transform: translateY(-4px) }
+  100% { transform: translateY(0) }
+}
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,128,181,.35) }
+  70% { box-shadow: 0 0 0 12px rgba(255,128,181,0) }
+  100% { box-shadow: 0 0 0 0 rgba(255,128,181,0) }
+}
+.animate-fade { animation: fade-in .4s ease forwards }
+.animate-rise { animation: rise-in .45s ease forwards }
+.animate-pop { animation: pop-in .28s ease forwards }
+.animate-float { animation: float-y 4s ease-in-out infinite }
+.glow-once { animation: glow-pulse 1.4s ease-out 1 }
+
+.hover-elevate {
+  transition: transform .25s ease, box-shadow .25s ease, background-color .2s ease;
+}
+.hover-elevate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px -20px rgba(0,0,0,.35);
+}
 

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import type { Memory } from "@types/memory";
+import type { Memory } from "../types/memory";
 import { CATEGORY_LABELS, CATEGORY_COLORS } from "@utils/constants";
 import { useAppStore } from "@store/store";
 import BucketListToggle from "./BucketListToggle";

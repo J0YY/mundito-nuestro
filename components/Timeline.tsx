@@ -20,11 +20,11 @@ export default function Timeline() {
   }
 
   return (
-    <div className="max-h-[60vh] overflow-auto divide-y divide-white/10">
+    <div className="max-h-[60vh] overflow-auto divide-y divide-white/10 animate-rise">
       {memories.map((m) => (
         <button
           key={m.id}
-          className="w-full text-left p-3 hover:bg-white/60 dark:hover:bg-white/10 transition"
+          className="w-full text-left p-3 hover:bg-white/60 dark:hover:bg-white/10 transition hover-elevate"
           onClick={() => {
             setSelectedMemoryId(m.id);
             setViewMode('map');

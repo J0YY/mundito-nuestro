@@ -4,8 +4,8 @@ import { createPortal } from "react-dom";
 
 export default function AboutModal({ onClose }: { onClose: () => void }) {
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg romantic-card p-5 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade">
+      <div className="w-full max-w-lg romantic-card p-5 shadow-2xl animate-pop">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">About mundito nuestro</h3>
           <button className="text-slate-500 hover:text-slate-800" onClick={onClose}>Close</button>

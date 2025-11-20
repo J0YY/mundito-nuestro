@@ -3,10 +3,11 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { supabase } from '@lib/supabaseClient';
 import { CATEGORY_COLORS } from '@utils/constants';
-import type { Category, Contributor, Memory, NewMemoryInput } from '@types/memory';
+import type { Category, Contributor, Memory, NewMemoryInput } from '../types/memory';
 import { isAfter, isBefore, parseISO } from 'date-fns';
 
 type ViewMode = 'map' | 'timeline' | 'cinematic';
+type MapPerspective = 'map' | 'globe';
 
 interface FiltersState {
   contributor: 'all' | Contributor;
@@ -25,6 +26,11 @@ interface AppState {
   loading: boolean;
   error: string | null;
   viewMode: ViewMode;
+  mapPerspective: MapPerspective;
+  pendingFlyTo: { lat: number; lng: number; zoom?: number } | null;
+  initialCenter: { lat: number; lng: number };
+  initialZoom: number;
+  mapVersion: number;
   filters: FiltersState;
   timeRange: TimeRangeState;
   showTrails: boolean;
@@ -36,12 +42,14 @@ interface AppState {
   updateMemory: (id: string, updates: Partial<NewMemoryInput & { is_bucket_list_completed: boolean }>) => Promise<void>;
   deleteMemory: (id: string) => Promise<void>;
   setViewMode: (mode: ViewMode) => void;
+  setMapPerspective: (mode: MapPerspective) => void;
   setFilters: (partial: Partial<FiltersState>) => void;
   resetFilters: () => void;
   setTimeRange: (partial: Partial<TimeRangeState>) => void;
   setShowTrails: (v: boolean) => void;
   setShowThoughtHeatmap: (v: boolean) => void;
   setSelectedMemoryId: (id: string | null) => void;
+  flyTo: (lat: number, lng: number, zoom?: number) => void;
   getFilteredMemories: () => Memory[];
   getAllYears: () => number[];
 }
@@ -51,6 +59,11 @@ export const useAppStore = create<AppState>()(devtools((set, get) => ({
   loading: false,
   error: null,
   viewMode: 'map',
+  mapPerspective: 'map',
+  pendingFlyTo: null,
+  initialCenter: { lat: 20, lng: 0 },
+  initialZoom: 2,
+  mapVersion: 0,
   filters: {
     contributor: 'all',
     categories: new Set<Category>([
@@ -136,6 +149,7 @@ export const useAppStore = create<AppState>()(devtools((set, get) => ({
     if (error) set({ error: error.message });
   },
   setViewMode: (mode) => set({ viewMode: mode }),
+  setMapPerspective: (mode) => set({ mapPerspective: mode }),
   setFilters: (partial) => set((s) => ({ filters: { ...s.filters, ...partial } })),
   resetFilters: () => set({
     filters: {
@@ -152,6 +166,15 @@ export const useAppStore = create<AppState>()(devtools((set, get) => ({
   setShowTrails: (v) => set({ showTrails: v }),
   setShowThoughtHeatmap: (v) => set({ showThoughtHeatmap: v }),
   setSelectedMemoryId: (id) => set({ selectedMemoryId: id }),
+  flyTo: (lat, lng, zoom) => {
+    console.log("[Store] set pendingFlyTo", { lat, lng, zoom });
+    set((s) => ({
+      pendingFlyTo: { lat, lng, zoom },
+      initialCenter: { lat, lng },
+      initialZoom: zoom ?? s.initialZoom,
+      mapVersion: s.mapVersion + 1
+    }));
+  },
   getFilteredMemories: () => {
     const { memories, filters, timeRange } = get();
     return memories.filter((m) => {

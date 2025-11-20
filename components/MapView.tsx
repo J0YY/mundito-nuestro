@@ -1,12 +1,13 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L, { LeafletMouseEvent } from "leaflet";
-import type { Memory } from "@types/memory";
+import type { Memory } from "../types/memory";
 import { CATEGORY_COLORS } from "@utils/constants";
 import { useAppStore } from "@store/store";
 import MemoryForm from "./MemoryForm";
 import MemoryPopup from "./MemoryPopup";
+import SearchBar from "./SearchBar";
 
 function HeatmapLayer({ points }: { points: Array<[number, number, number?]> }) {
   const map = useMap();
@@ -51,8 +52,85 @@ function InteractionLayer({ onContextMenu }: { onContextMenu: (e: L.LeafletMouse
   return null;
 }
 
+function MapClickHandler({ onClick }: { onClick: (e: L.LeafletMouseEvent) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick(e);
+    }
+  });
+  return null;
+}
+
+function FlyToController() {
+  const map = useMap();
+  const pending = useAppStore((s) => s.pendingFlyTo);
+  useEffect(() => {
+    if (!pending) return;
+    console.log("[FlyToController] pendingFlyTo received", pending);
+    const { lat, lng, zoom } = pending;
+    // Ensure size is correct before moving
+    map.invalidateSize(true);
+    // Use setView with animation; keep it single-shot to avoid conflicts
+    map.setView([lat, lng], zoom ?? 16, { animate: true });
+    console.log("[FlyToController] setView called", { center: [lat, lng], zoom });
+    map.once('moveend', () => {
+      console.log("[FlyToController] moveend center", map.getCenter(), "zoom", map.getZoom());
+      // Safety: ensure final zoom and a tiny nudge to force re-render if needed
+      if (map.getZoom() < (zoom ?? 16)) {
+        map.setZoom(zoom ?? 16, { animate: false });
+      }
+      map.panBy([1, 1], { animate: false });
+      map.panBy([-1, -1], { animate: false });
+    });
+    const pulse = L.circleMarker([lat, lng], {
+      radius: 10,
+      color: '#ff80b5',
+      fillColor: '#ff80b5',
+      fillOpacity: 0.7
+    }).addTo(map);
+    setTimeout(() => { try { map.removeLayer(pulse); } catch {} }, 2500);
+    // clear pending
+    // @ts-ignore
+    useAppStore.setState({ pendingFlyTo: null });
+  }, [pending, map]);
+  return null;
+}
+
+function MapDebug() {
+  const map = useMap();
+  const [info, setInfo] = React.useState<{ lat: number; lng: number; z: number }>({ lat: 0, lng: 0, z: 0 });
+  useEffect(() => {
+    const update = () => {
+      const c = map.getCenter();
+      setInfo({ lat: Number(c.lat.toFixed(5)), lng: Number(c.lng.toFixed(5)), z: map.getZoom() });
+    };
+    update();
+    map.on('move', update);
+    map.on('zoom', update);
+    return () => {
+      map.off('move', update);
+      map.off('zoom', update);
+    };
+  }, [map]);
+  return (
+    <div className="absolute left-2 bottom-2 text-[11px] px-2 py-1 rounded bg-black/40 text-white pointer-events-none">
+      {info.lat}, {info.lng} · z{info.z}
+    </div>
+  );
+}
+
 export default function MapView() {
-  const { getFilteredMemories, showTrails, showThoughtHeatmap, selectedMemoryId, setSelectedMemoryId } = useAppStore();
+  const {
+    getFilteredMemories,
+    showTrails,
+    showThoughtHeatmap,
+    selectedMemoryId,
+    setSelectedMemoryId,
+    pendingFlyTo,
+    initialCenter,
+    initialZoom,
+    mapVersion
+  } = useAppStore();
   const memories = getFilteredMemories();
   const [formOpen, setFormOpen] = useState(false);
   const [initialLatLng, setInitialLatLng] = useState<{ lat: number; lng: number } | null>(null);
@@ -62,11 +140,11 @@ export default function MapView() {
   const [isDraggingHeart, setIsDraggingHeart] = useState(false);
   const [dragClient, setDragClient] = useState<{ x: number; y: number } | null>(null);
 
-  const handleMapClick = (e: LeafletMouseEvent) => {
+  const handleMapClick = useCallback((e: LeafletMouseEvent) => {
     setEditing(null);
     setInitialLatLng({ lat: e.latlng.lat, lng: e.latlng.lng });
     setFormOpen(true);
-  };
+  }, []);
 
   const thoughtPoints = useMemo(() => memories.filter((m) => m.category === 'thought').map((m) => [m.lat, m.lng, 0.5] as [number, number, number]), [memories]);
   const trails = useMemo(() => {
@@ -80,6 +158,7 @@ export default function MapView() {
     if (!selectedMemoryId || !mapRef.current) return;
     const m = memories.find((x) => x.id === selectedMemoryId);
     if (m) {
+      console.log("[MapView] selectedMemoryId flyTo", m);
       mapRef.current.flyTo([m.lat, m.lng], 8, { duration: 1.2 });
       // open the popup for the target marker after a short delay
       setTimeout(() => {
@@ -92,21 +171,23 @@ export default function MapView() {
     }
   }, [selectedMemoryId, memories, setSelectedMemoryId]);
 
+  // NOTE: flyTo is handled by <FlyToController /> to ensure it runs within Leaflet context
+
   return (
-    <div className="relative">
+    <div className="relative h-full min-h-[560px]">
       <MapContainer
-        className="map-frame h-[72vh] md:h-[74vh] w-full"
-        center={[20, 0]} zoom={2}
-        whenCreated={(map) => {
-          mapRef.current = map;
-          map.on('click', handleMapClick);
-        }}
+        key={mapVersion}
+        ref={mapRef}
+        className="map-frame w-full h-full animate-rise"
+        center={[initialCenter.lat, initialCenter.lng]}
+        zoom={initialZoom}
       >
         <TileLayer
           attribution='&copy; OpenStreetMap'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        {/* Context menu and map interactions */}
         <InteractionLayer
           onContextMenu={(e) => {
             setEditing(null);
@@ -114,6 +195,9 @@ export default function MapView() {
             setFormOpen(true);
           }}
         />
+        <MapClickHandler onClick={handleMapClick} />
+        <FlyToController />
+        <MapDebug />
 
         {showThoughtHeatmap ? <HeatmapLayer points={thoughtPoints} /> : null}
 
@@ -161,6 +245,13 @@ export default function MapView() {
         ) : null}
       </MapContainer>
 
+      {/* Overlayed Search on the map */}
+      <div className="absolute right-3 top-3 z-[1100] w-[260px] sm:w-[320px] animate-pop">
+        <div className="rounded-2xl border border-white/60 bg-white/70 shadow-[0_10px_35px_-20px_rgba(255,128,181,0.9)]">
+          <SearchBar />
+        </div>
+      </div>
+
       {showHint ? (
         <div className="absolute left-16 top-3 bg-white/90 dark:bg-slate-900/90 border border-white/30 rounded-xl px-3 py-2 text-sm shadow-soft">
           Tap the map to add a memory.
@@ -169,7 +260,7 @@ export default function MapView() {
       ) : null}
 
       <div
-        className="absolute bottom-4 right-4 z-[1001] rounded-full w-14 h-14 flex items-center justify-center bg-gradient-to-br from-core to-pink-500 text-white text-2xl shadow-[0_10px_30px_-10px_rgba(255,128,181,0.8)] cursor-grab active:cursor-grabbing select-none pointer-events-auto"
+        className="absolute bottom-4 right-4 z-[1001] rounded-full w-14 h-14 flex items-center justify-center bg-gradient-to-br from-core to-pink-500 text-white text-2xl shadow-[0_10px_30px_-10px_rgba(255,128,181,0.8)] cursor-grab active:cursor-grabbing select-none pointer-events-auto animate-float hover-elevate"
         onPointerDown={(e) => {
           e.preventDefault();
           setIsDraggingHeart(true);

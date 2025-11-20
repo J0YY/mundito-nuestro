@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CATEGORY_COLORS } from "@utils/constants";
-import type { Category, Contributor, Memory, NewMemoryInput } from "@types/memory";
+import type { Category, Contributor, Memory, NewMemoryInput } from "../types/memory";
 import { useAppStore } from "@store/store";
 import { supabase } from "@lib/supabaseClient";
 
@@ -106,8 +106,8 @@ export default function MemoryForm({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-3">
-      <div className="w-full max-w-lg romantic-card p-4 max-h-[85vh] overflow-auto shadow-2xl">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 p-3 animate-fade">
+      <div className="w-full max-w-lg romantic-card p-4 max-h-[85vh] overflow-auto shadow-2xl animate-pop">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">{heading}</h3>
           <button className="text-slate-500 hover:text-slate-800" onClick={onClose}>Close</button>

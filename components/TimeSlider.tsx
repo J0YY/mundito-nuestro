@@ -12,7 +12,7 @@ export default function TimeSlider() {
   }, [memories]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 animate-rise">
       <div className="text-sm font-medium">Time range</div>
       <div className="grid grid-cols-2 gap-2">
         <div>

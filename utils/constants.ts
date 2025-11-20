@@ -1,4 +1,4 @@
-import { Category } from "@types/memory";
+import { Category } from "../types/memory";
 
 export const CATEGORY_COLORS: Record<Category, string> = {
   core: '#ff80b5',
