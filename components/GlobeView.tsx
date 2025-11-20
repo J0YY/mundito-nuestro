@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Line, Stars } from "@react-three/drei";
 import * as THREE from "three";
 import countries from "world-countries";
+type LngLatTuple = [number, number];
 import { useAppStore } from "@store/store";
 import { CATEGORY_COLORS } from "@utils/constants";
 
@@ -38,19 +39,19 @@ interface GlobeArc {
 
 const CountryLines = () => {
   const lineData = useMemo(() => {
-    const lines: { id: string; points: THREE.Vector3[] }[] = [];
+  const lines: { id: string; points: THREE.Vector3[] }[] = [];
     countries.forEach((country) => {
       const geom = country.geometry;
       if (!geom) return;
-      const processRing = (ring: number[][]) => {
+    const processRing = (ring: LngLatTuple[]) => {
         const pts = ring.map(([lng, lat]) => latLngToVector(lat, lng, 1.005));
         if (pts.length > 0) pts.push(pts[0].clone());
         lines.push({ id: `${country.cca3}-${lines.length}`, points: pts });
       };
       if (geom.type === "Polygon") {
-        geom.coordinates.forEach((ring) => processRing(ring as number[][]));
+      (geom.coordinates as LngLatTuple[][]).forEach((ring) => processRing(ring));
       } else if (geom.type === "MultiPolygon") {
-        geom.coordinates.forEach((poly) => poly.forEach((ring) => processRing(ring as number[][])));
+      (geom.coordinates as LngLatTuple[][][]).forEach((poly) => poly.forEach((ring) => processRing(ring)));
       }
     });
     return lines;
